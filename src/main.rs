@@ -50,11 +50,11 @@ fn main() {
     let x = request_num("X of source region is: ");
     let y = request_num("Y of source region is: ");
 
-    let region_file_name = format!("r.{}.{}.mca", x, y);
-    let region_file_path = folder_path.join(Path::new(&region_file_name));
+    let src_region_name = format!("r.{}.{}.mca", x, y);
+    let src_region_path = folder_path.join(Path::new(&src_region_name));
 
-    if !region_file_path.exists() || !region_file_path.is_file() {
-        println!("The region file '{}' does not exist or isn't a file.", &region_file_name);
+    if !src_region_path.exists() || !src_region_path.is_file() {
+        println!("The region file '{}' does not exist or isn't a file.", &src_region_name);
         exit(2);
     }
 
@@ -92,7 +92,7 @@ fn main() {
         let entry = e.ok()?;
         if entry.file_type().ok()?.is_file() {
             let file_name = entry.file_name().to_string_lossy().into_owned();
-            if &file_name != &region_file_name {
+            if &file_name != &src_region_name {
                 Some(file_name)
             } else {
                 None
@@ -110,14 +110,29 @@ fn main() {
 
         print!("Removing '{}' ...", &region);
         io::stdout().flush().unwrap();
-        match fs::remove_file(region_path) {
+        match fs::remove_file(&region_path) {
             Ok(_) => {
                 println!("done");
-                io::stdout().flush().unwrap();
 
-                success += 1;
+                print!("Recreating '{}' ...", &region);
+                io::stdout().flush().unwrap();
+                match fs::copy(&src_region_path, &region_path) {
+                    Ok(_) => {
+                        println!("done");
+
+                        success += 1;
+                    },
+                    Err(err) => {
+                        println!("failure");
+                        println!("Failed to recreate {}: {:?}", &region, err);
+                        println!("Skipping.");
+
+                        failure += 1;
+                    }
+                }
             },
             Err(err) => {
+                println!("failure");
                 println!("Failed to remove {}: {:?}", &region, err);
                 println!("Skipping.");
 
