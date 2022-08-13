@@ -1,4 +1,4 @@
-use std::io;
+use std::{fs, io};
 use std::io::Write;
 use std::path::Path;
 use std::process::exit;
@@ -65,7 +65,7 @@ fn main() {
     let mut confirm_result = false;
 
     while !done_confirm {
-        print!("Continue ?(y/n): ");
+        print!("Continue? (y/n): ");
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
@@ -87,6 +87,47 @@ fn main() {
         println!("Aborting.");
         exit(1);
     }
+
+    let region_names = fs::read_dir(&folder_path).unwrap().filter_map(|e| {
+        let entry = e.ok()?;
+        if entry.file_type().ok()?.is_file() {
+            let file_name = entry.file_name().to_string_lossy().into_owned();
+            if &file_name != &region_file_name {
+                Some(file_name)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }).collect::<Vec<String>>();
+
+    let mut success = 0;
+    let mut failure = 0;
+
+    for region in &region_names {
+        let region_path = folder_path.join(Path::new(&region));
+
+        print!("Removing '{}' ...", &region);
+        io::stdout().flush().unwrap();
+        match fs::remove_file(region_path) {
+            Ok(_) => {
+                println!("done");
+                io::stdout().flush().unwrap();
+
+                success += 1;
+            },
+            Err(err) => {
+                println!("Failed to remove {}: {:?}", &region, err);
+                println!("Skipping.");
+
+                failure += 1;
+            }
+        }
+    }
+
+    println!("Success {}, Failure {}.", success, failure);
+    println!("Complete!");
 }
 
 fn request_num(msg: &str) -> i32 {
