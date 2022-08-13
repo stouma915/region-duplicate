@@ -57,6 +57,36 @@ fn main() {
         println!("The region file '{}' does not exist or isn't a file.", &region_file_name);
         exit(2);
     }
+
+    println!();
+    println!("WARNING: World data will be destroyed.");
+
+    let mut done_confirm = false;
+    let mut confirm_result = false;
+
+    while !done_confirm {
+        print!("Continue ?(y/n): ");
+        io::stdout().flush().unwrap();
+
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).ok();
+
+        let replaced = if cfg!(windows) {
+            input.replace("\r\n", "")
+        } else {
+            input.replace("\n", "")
+        }.to_lowercase();
+
+        if replaced == "y" || replaced == "n" {
+            done_confirm = true;
+            confirm_result = replaced == "y";
+        }
+    }
+
+    if !confirm_result {
+        println!("Aborting.");
+        exit(1);
+    }
 }
 
 fn request_num(msg: &str) -> i32 {
