@@ -141,6 +141,7 @@ fn main() {
         }
     }
 
+    println!();
     println!("Success {}, Failure {}.", success, failure);
     println!("Complete!");
 }
