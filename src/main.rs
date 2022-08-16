@@ -143,7 +143,7 @@ fn main() {
 
     println!();
     println!("Success {}, Failure {}.", success, failure);
-    println!("Complete!");
+    println!("Complete.");
 }
 
 fn request_num(msg: &str) -> i32 {
